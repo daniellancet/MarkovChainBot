@@ -46,7 +46,9 @@ if __name__ == "__main__":
     paths =  glob.glob("/Users/daniellancet/Desktop/Projects/Markov_Chain_Beginner_Project/Song-Lyrics/Kendrick-Lamar/*")
     generator = ArtistTextGenerator(paths)
     text =generator.build_text(500)
-    print(text)
+    for i in range(20):
+        text =generator.build_text(10 + np.random.choice([-1, -2, -3, 1, 2, 3]))
+        print(text)
     # how t
     #print(generator.chain)
 
