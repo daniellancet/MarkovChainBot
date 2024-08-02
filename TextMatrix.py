@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import glob
+import string
 
 
 class TextMatrix():
@@ -8,6 +9,7 @@ class TextMatrix():
         self.text_paths = text_paths
         self.chain = None
         self.text = None
+        self.index_to_word = None
     
     
     def get_text(self):
@@ -16,9 +18,9 @@ class TextMatrix():
             my_file = open(path, "r") 
 
             data = my_file.read() 
-            data_into_series = pd.Series((data.replace('\n', ' ').replace(",", "").replace('"', " ").replace(":", " ").
-                                          replace("&", "and").replace("(", " ").replace(")", " ").
-                                          replace("?", " ?").replace("!", " !").replace("/", " ").replace("]", "").replace("[", "").lower().split(' ')))
+            data = data.translate(str.maketrans(' ', ' ', string.punctuation))
+            data = data.replace("/", " ").replace("\\", " ").replace("\n", " ")
+            data_into_series = pd.Series((data.lower().split(' ')))
             
 
             corpus.append(data_into_series)
@@ -37,6 +39,7 @@ class TextMatrix():
         dimension = len(unique_words)
         index_dict = {value: idx for idx, value in enumerate(unique_words)}
         self.chain = np.zeros((dimension, dimension), dtype = int)
+        self.index_to_word = dict((v, k) for k, v in index_dict.items())
 
         l, r = 0, 1
 
@@ -48,28 +51,33 @@ class TextMatrix():
             r = r + 1
             l = l + 1
         
+    def path_probabilities(self, word_index):
+        weights = self.chain[word_index]/sum( self.chain[word_index]) if sum(self.chain[word_index]) != 0 else [1/len(self.chain) for _ in range(len(self.chain))]
+        return weights 
+
+        
 
 
 
 
 
 if __name__ == "__main__":
-   print("hello")
+  
 
 
 
 #  import matplotlib.pyplot as plt
 #  import networkx as nx
 #  import glob
-#  paths =  glob.glob("/Users/daniellancet/Desktop/Projects/Markov_Chain_Beginner_Project/Song-Lyrics/Kendrick-Lamar/*")
-#  matrix_obj = TextMatrix(paths)
+    paths =  glob.glob("/Users/daniellancet/Desktop/Projects/Markov_Chain_Beginner_Project/Song-Lyrics/Kendrick-Lamar/3117.txt")
+    matrix_obj = TextMatrix(paths)
 
-#  matrix_obj.get_text()
-#  matrix_obj.build_chain()
+    matrix_obj.get_text()
+    matrix_obj.build_chain()
 
-#  matrix = matrix_obj.chain
-#  index_dict = {value: idx for idx, value in enumerate(set(matrix_obj.text))}
-
+    print(matrix_obj.index_to_word)
+   
+ #matrix
 
 # # # Create a NetworkX graph
 # G = nx.DiGraph()
