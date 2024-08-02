@@ -10,53 +10,41 @@ class TextMatrix():
         self.chain = None
         self.text = None
         self.index_to_word = None
-    
-    
+
     def get_text(self):
         corpus = []
         for path in self.text_paths:
-            my_file = open(path, "r") 
-
-            data = my_file.read() 
-            data = data.translate(str.maketrans(' ', ' ', string.punctuation))
-            data = data.replace("/", " ").replace("\\", " ").replace("\n", " ")
-            data_into_series = pd.Series((data.lower().split(' ')))
-            
-
-            corpus.append(data_into_series)
+            with open(path, "r") as my_file:
+                data = my_file.read()
+                data = data.translate(str.maketrans('', '', string.punctuation))
+                data = data.replace("/", " ").replace("\\", " ").replace("\n", " ")
+                data_into_series = pd.Series(data.lower().split())
+                corpus.append(data_into_series)
         
-        # concat corpus
-        self.text =  np.array(pd.concat(corpus, axis = 0))
+        # Concatenate corpus
+        self.text = np.array(pd.concat(corpus, axis=0))
+        # Remove empty strings
+        self.text = self.text[self.text != '']
 
-        
-        
-
-
-    
     def build_chain(self):
         unique_words = set(self.text)
-        
         dimension = len(unique_words)
         index_dict = {value: idx for idx, value in enumerate(unique_words)}
-        self.chain = np.zeros((dimension, dimension), dtype = int)
+        self.chain = np.zeros((dimension, dimension), dtype=int)
         self.index_to_word = dict((v, k) for k, v in index_dict.items())
 
-        l, r = 0, 1
-
-        while r < len(unique_words):
+        for l in range(len(self.text) - 1):
             word_from = index_dict[self.text[l]]
-            word_to = index_dict[self.text[r]]
-            self.chain[word_to, word_from] =  self.chain[word_to, word_from] + 1
-           
-            r = r + 1
-            l = l + 1
-        
+            word_to = index_dict[self.text[l + 1]]
+            self.chain[word_from, word_to] += 1  # Corrected order
+
     def path_probabilities(self, word_index):
-        weights = self.chain[word_index]/sum( self.chain[word_index]) if sum(self.chain[word_index]) != 0 else [1/len(self.chain) for _ in range(len(self.chain))]
-        return weights 
-
-        
-
+        row_sum = self.chain[word_index].sum()
+        if row_sum == 0:
+            weights = np.full(len(self.chain), 1 / len(self.chain))
+        else:
+            weights = self.chain[word_index] / row_sum
+        return weights
 
 
 
